@@ -1,24 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TensorFlow.js Tutorial</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA Recognition</title>
 
-  <!-- Import TensorFlow.js -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
-  <!-- Import tfjs-vis -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js"></script>
+    <!-- Import TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
+    <!-- Import tfjs-vis -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js"></script>
 
-  <!-- Import the data file -->
-  <script src="data.js" type="module"></script>
+    <!-- Import the data file -->
+    <script src="data.js" type="module"></script>
 
-  <!-- Import the main script file -->
-  <script src="script.js" type="module"></script>
+    <!-- Import the main script file -->
+    <script src="script.js" type="module"></script>
 
+    <style>
+        .sketchpad {
+            border: 1px solid #888;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            width: 400px;
+        }
+        .canvas-item {
+          text-align: center;
+        }
+
+
+    </style>
 </head>
 
-<body>
+<body onload="init()">
+<h2>1. Entrenar el modelo.</h2>
+<button type="button" id="train">Entrenar modelo</button>
+<h2>2. Dibujar el canvas.</h2>
+<div class="container">
+    <div class="canvas-item">
+        <p>Canvas 1</p>
+        <canvas class="sketchpad" height="28" width="28" data-id="0"></canvas>
+    </div>
+    <div class="canvas-item">
+        <p>Canvas 2</p>
+        <canvas class="sketchpad" height="28" width="28" data-id="1"></canvas>
+    </div>
+    <div class="canvas-item">
+        <p>Canvas 3</p>
+        <canvas class="sketchpad" height="28" width="28" data-id="2"></canvas>
+    </div>
+    <div class="canvas-item">
+        <p>Canvas 4</p>
+        <canvas class="sketchpad" height="28" width="28" data-id="3"></canvas>
+    </div>
+    <div class="canvas-item">
+        <p>Canvas 5</p>
+        <canvas class="sketchpad" height="28" width="28" data-id="4"></canvas>
+    </div>
+</div>
+<h2>3. Reconocer los dígitos.</h2>
+<button type="button" onclick="exportData()">Reconocer dígitos</button>
+<script src="index.js"></script>
 </body>
 </html>

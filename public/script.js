@@ -42,7 +42,8 @@ async function run() {
     await showConfusion(model, data);
 }
 
-document.addEventListener('DOMContentLoaded', run);
+//document.addEventListener('DOMContentLoaded', run);
+
 
 function getModel() {
     const model = tf.sequential();
@@ -174,3 +175,7 @@ async function showConfusion(model, data) {
     labels.dispose();
 }
 
+document.getElementById('train').addEventListener('click', () => {
+    run();
+});
+//document.addEventListener('DOMContentLoaded', init);

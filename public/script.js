@@ -28,16 +28,20 @@ async function showExamples(data) {
         imageTensor.dispose();
     }
 }
-
-const data = new MnistData();
 let model;
 async function run() {
+    const data = new MnistData();
     await data.load();
     await showExamples(data);
+
     model = getModel();
     tfvis.show.modelSummary({name: 'Model Architecture'}, model);
+
     await train(model, data);
+    await showAccuracy(model, data);
+    await showConfusion(model, data);
 }
+
 function getModel() {
     const model = tf.sequential();
 
@@ -107,6 +111,8 @@ async function train(model, data) {
     const fitCallbacks = tfvis.show.fitCallbacks(container, metrics);
 
     const BATCH_SIZE = 512;
+    //const TRAIN_DATA_SIZE = 55000;
+    //const TEST_DATA_SIZE = 10000;
     const TRAIN_DATA_SIZE = 5500;
     const TEST_DATA_SIZE = 1000;
 
@@ -134,15 +140,17 @@ async function train(model, data) {
         callbacks: fitCallbacks
     });
 }
+
 const classNames = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
 
-function doPrediction(model, data, testDataSize = 10) {
+function doPrediction(model, data, testDataSize = 500) {
     const IMAGE_WIDTH = 28;
     const IMAGE_HEIGHT = 28;
     const testData = data.nextTestBatch(testDataSize);
     const testxs = testData.xs.reshape([testDataSize, IMAGE_WIDTH, IMAGE_HEIGHT, 1]);
     const labels = testData.labels.argMax([-1]);
     const preds = model.predict(testxs).argMax([-1]);
+
     testxs.dispose();
     return [preds, labels];
 }
@@ -167,11 +175,6 @@ async function showConfusion(model, data) {
     labels.dispose();
 }
 
-document.getElementById('train').addEventListener('click', () => {
-    run();
-});
-
-
 // Variables for referencing the canvas and 2dcanvas context
 let canvas, ctx =[];
 
@@ -182,16 +185,19 @@ let mouseX, mouseY, mouseDown = 0;
 // Parameters are: A canvas context, the x position, the y position, the size of the dot
 function drawDot(ctx, x, y) {
     let pxData = ctx.getImageData(x, y, 28, 28);
-    pxData.data[0] = 0;
-    pxData.data[1] = 0;
-    pxData.data[2] = 0;
+    pxData.data[0] = 255;
+    pxData.data[1] = 255;
+    pxData.data[2] = 255;
     pxData.data[3] = 255;
     ctx.putImageData(pxData, x, y);
 }
 
 // Clear the canvas context using the canvas width and height
-function clearCanvas(ctx) {
-    ctx.clearRect(0, 0, 28, 28);
+function cleanCanvas() {
+    ctx.forEach(element => {
+        element.fillStyle = 'black';
+        element.fillRect(0, 0, 28, 28);
+    });
 }
 
 // Keep track of the mouse button being pressed and draw a dot at current location
@@ -240,6 +246,8 @@ function init() {
     //  ctx = canvas.getContext('2d');
     canvas.forEach((element,index) => {
         ctx.push(element.getContext('2d'));
+        ctx[index].fillStyle = 'black';
+        ctx[index].fillRect(0, 0, 28, 28);
         element.addEventListener('mousedown', sketchpad_mouseDown, false);
         element.addEventListener('mousemove', sketchpad_mouseMove, false);
     });
@@ -255,25 +263,43 @@ function init() {
 }
 
 async function exportData() {
+
     let imgData = [];
-    ctx.forEach((element) => {
-        imgData.push(element.getImageData(0,0,28,28).data);
+    ctx.forEach(element => {
+       imgData.push(element.getImageData(0,0,28,28));
     });
-
-    let finalData = imgData.map((element) => {
-        let tempData = [];
-        for (let i = 3; i < element.length; i=i+4) {
-            tempData.push(element[i]);
-        }
-        return tempData;
+    const pred = await tf.tidy(() => {
+        let predictions,img,output;
+        return imgData.map(element => {
+            img = tf.browser.fromPixels(element, 1);
+            img = img.reshape([1, 28, 28, 1]);
+            img = tf.cast(img, 'float32');
+            output = model.predict(img);
+            return predictions = Array.from(output.dataSync());
+        });
     });
-    console.log(finalData);
-
-    const model = getModel();
-    const [preds, labels] = doPrediction(model, data);
-    console.log('test');
-    console.log(data);
+    console.log(pred);
+    const finalResults = pred.map(element => {
+        return indexOfMax(element);
+    });
+    console.log(finalResults);
+    document.getElementById('numbers').value = finalResults;
 }
-
+function indexOfMax(arr) {
+    if (arr.length === 0) {
+        return -1;
+    }
+    let max = arr[0];
+    let maxIndex = 0;
+    for (let i = 1; i < arr.length; i++) {
+        if (arr[i] > max) {
+            maxIndex = i;
+            max = arr[i];
+        }
+    }
+    return maxIndex;
+}
+document.getElementById('train').addEventListener('click', run);
+document.getElementById('clean').addEventListener('click', cleanCanvas);
 document.addEventListener('DOMContentLoaded', init);
-document.getElementById('recognize').addEventListener('click', () => exportData());
+document.getElementById('recognize').addEventListener('click', exportData);
